@@ -1,0 +1,12 @@
+#!/usr/bin/gnuplot
+
+#rtl_power -f 126.674M:126.676M:20 -i 10 -p 78  -g 20 a
+!awk 'BEGIN{FS=", "}{date=$1; time=$2; fbeg=$3; fend=$4; fstep=$5;i=0; for(f=fbeg;f<=fend;f+=fstep){i++;printf ("%s %s, %d, %f\n",date, time, f, $(6+i)); }print "";}' <a >|b
+
+
+set datafile separator comma
+set ydata time
+set timefmt "%Y-%m-%d %H:%M:%S"
+set format x "%20.3f" numeric
+set grid
+p "b" u ($2/1000):1:3 lc palette pt 5 ps 2

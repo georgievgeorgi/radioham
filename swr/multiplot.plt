@@ -3,13 +3,14 @@
 set term pdf size 12,4
 
 #FF=system("echo $FILE")
-FF=system("ls *.swr|paste -sd ' ' ")
+FF=system("ls -tr *.swr|paste -sd ' ' ")
 TITLE=system("basename $PWD")
 #FF="tmp.dat"
 set o sprintf("%s.pdf",FF)
 PLOT="p"
 do for [f in FF] {
-  PLOT=sprintf("%s '%s' u ($1/1000.):2 w lp ps .5 pt 2 tit '%s',",PLOT,f,f)
+  PLOT=sprintf("%s '%s' u ($1/1000.):2 w lp ps 1 lw 2 dashtype '-' tit '%s',",PLOT,f,f)
+  #PLOT=sprintf("%s '%s' u ($1/1000.):2 w lp ps .5 pt 2 lw 2 tit '%s',",PLOT,f,f)
 }
 PLOT=PLOT."1 notit lt 0"
 
@@ -31,8 +32,8 @@ set ytics format "%4.1f"
 set xtics rotate by 60 font ",8" offset 0,0 right format "%5.2f"
 
 FRST="set border 1+4+2;unset key; set yla 'SWR'; set ytics (1,1.5,2,3,5);set xtics autofreq "
-NEXT="set border 1+4; set ytics  offset 10000; unset yla; set xtics autofreq "
-LAST="set border 1+4+8;set key; set xtics autofreq "
+NEXT="set border 1+4; set ytics  offset 10000; unset yla; set xtics autofreq; unset key "
+LAST="set border 1+4+8;set key right Right; set xtics autofreq "
 
 
 
