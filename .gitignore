@@ -1,0 +1,60 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+.*.swp
+.*.un~
+Session.vim
+html/
+*.pcm
+*.pdf
+*.dat
+*.png
+*.svg
+fit.log
+a.out
+*.wiki/
+\#*#
+*-tmp
+*.tmp
+/caenlib
+kernel/extern/*
+!kernel/extern/README.md
+!kernel/extern/lib
+!kernel/extern/lib/*
+
+*.pyc
+*.pyo
+__pycache__/
+
+
+test.cc
+t.cc

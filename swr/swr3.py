@@ -21,7 +21,7 @@ class yaesu_com:
 
     def __connect(self, port, baudrate):
         print("Connect")
-        self.port = serial.Serial("/dev/ttyUSB0", baudrate=4800, timeout=3.0)
+        self.port = serial.Serial(port, baudrate=4800, timeout=3.0)
 
     def __disconnect(self):
         print("Disconnect")
@@ -186,20 +186,20 @@ def swrplot(inp, plotfile='',datafile='',):
     plt.savefig(plotfile, bbox_inches='tight')
 
 if __name__ == "__main__":
-    m = ft450d('/dev/ttyUSB0')
-    #m = ft991a('/dev/ttyUSB0')
+    #m = ft450d('/dev/ttyUSB0')
+    m = ft991a('/dev/ttyUSB0')
     #m.test()
     swr=[]
-    swr+=m.swr_scan_band_160m()
-    swr+=m.swr_scan_band_80m ()
-    swr+=m.swr_scan_band_40m ()
-    swr+=m.swr_scan_band_30m ()
+    #swr+=m.swr_scan_band_160m()
+    #swr+=m.swr_scan_band_80m ()
+    #swr+=m.swr_scan_band_40m ()
+    #swr+=m.swr_scan_band_30m ()
     swr+=m.swr_scan_band_20m ()
-    swr+=m.swr_scan_band_17m ()
-    swr+=m.swr_scan_band_15m ()
-    swr+=m.swr_scan_band_12m ()
-    swr+=m.swr_scan_band_10m ()
-    swr+=m.swr_scan_band_6m  ()
+    #swr+=m.swr_scan_band_17m ()
+    #swr+=m.swr_scan_band_15m ()
+    #swr+=m.swr_scan_band_12m ()
+    #swr+=m.swr_scan_band_10m ()
+    #swr+=m.swr_scan_band_6m  ()
     #swr+=m.swr_scan_band_2m  ()
     #swr+=m.swr_scan_band_70cm()
     #sorted(swr, key=itemgetter('freq'))
