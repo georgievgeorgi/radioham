@@ -30,17 +30,22 @@ class yaesu_com:
     def __sleep(self):
         time.sleep(.2)
 
+    def __sleep_tx(self): time.sleep(.025)
+    def __sleep_rx(self): time.sleep(1e-5)
+
     def __flush(self):
         self.port.flushInput()
         self.port.flushOutput()
 
-    def __write(self, cmd):
-        self.port.write(cmd.encode()+b';')
+    def __write(self,cmd):
+        cmd+=';'
+        for i in cmd:
+            self.__sleep_tx()
+            self.port.write(i.encode())
 
     def _writef(self, cmd):
         self.__flush()
-        print("WRITE: "+cmd)
-        self.port.write(cmd.encode()+b';')
+        self.__write(cmd)
 
     def __read(self):
         in_buff=b''
@@ -56,39 +61,28 @@ class yaesu_com:
         return int(self.__read()[2:-1])
     def set_power(self,v):
         self._writef("PC%03d"%(v))
-
-    def get_frequency(self):
-        self._writef("FA")
-        return int(self.__read()[2:-1])
-
     def get_frequency(self):
         self._writef("FA")
         return int(self.__read()[2:-1])
     def set_frequency(self): pass
-
     def get_swr(self):
         self._writef("RM6")
         return int(self.__read()[3:-1])
-
     def set_transmit_on(self):
         self._writef("TX1")
     def set_transmit_off(self):
         self._writef("TX0")
-
     def set_tuner_off(self):
         self._writef("AC000")
     def set_tuner_on(self):
         self._writef("AC001")
     def set_tuner_start_tunning(self):
         self._writef("AC002")
-
     def set_mode_cwusb(self):
         self._writef("MD03")
-
     def test(self):
         self.swr_scan( 7010000)
         f=self.get_frequency()
-
     def swr_measure(self,hertz,power=10):
         swrarr=[]
         self.set_frequency(hertz)
@@ -107,7 +101,7 @@ class yaesu_com:
 
     def swr_scan(self,hertz,power=10):
         if hasattr(hertz,"__len__"):
-             return [self.swr_measure(f,power) for f in hertz]
+            return [self.swr_measure(f,power) for f in hertz]
         else:
             return [self.swr_measure(hertz,power)]
 
