@@ -6,24 +6,47 @@ import math
 import numpy
 import pandas
 import matplotlib.pyplot as plt
+from enum import Enum
+
+
+class eModes(Enum):
+    lsb    =0x1
+    usb    =0x2
+    cwusb  =0x3
+    fm     =0x4
+    am     =0x5
+    rttylsb=0x6
+    cwlsb  =0x7
+    datalsb=0x8
+    rttyusb=0x9
+    datafm =0xA
+    fmn    =0xB
+    datausb=0xC
+    amn    =0xD
+    c4fm   =0xE
+
+
+
 
 class yaesu_com:
 
 
-    def port(slef):
-        return self.port
+    #def port(slef):
+    #    return self.port
 
     def __init__(self, port, baudrate=4800):
         self.__connect(port, baudrate)
-
+        self.verbose=False
     def __del__(self):
         self.__disconnect()
+    def set_verbose(self): self.verbose=True
 
     def __connect(self, port, baudrate):
         print("Connect")
         self.port = serial.Serial(port, baudrate=4800, timeout=3.0)
 
     def __disconnect(self):
+        self.set_transmit_off()
         print("Disconnect")
         self.port.close()
 
@@ -39,9 +62,13 @@ class yaesu_com:
 
     def __write(self,cmd):
         cmd+=';'
+        if self.verbose:print(end='>>> ')
         for i in cmd:
             self.__sleep_tx()
             self.port.write(i.encode())
+            if self.verbose:print(i,end='')
+        if self.verbose:print()
+
 
     def _writef(self, cmd):
         self.__flush()
@@ -49,11 +76,19 @@ class yaesu_com:
 
     def __read(self):
         in_buff=b''
-        self.__sleep()
-        while self.port.in_waiting:
-            in_buff+=self.port.read_all()    #read the contents of the buffer
-            self.__sleep()
-        print("READ: %s"%(in_buff))
+        waitnone=0
+        while True:
+            more=self.port.inWaiting()
+            recv=self.port.read_all()
+            in_buff+=recv
+            if waitnone == 200: break
+            if more==0:
+                self.__sleep_rx()
+                waitnone+=1
+            else:
+                if self.verbose:print(waitnone, "  inWaiting ",more," ", len(recv), "   ", len(in_buff))
+                waitnone=0
+        if self.verbose:print("<<< (%d) %s"%(len(in_buff),in_buff))
         return in_buff
 
     def get_power(self):
@@ -68,18 +103,34 @@ class yaesu_com:
     def get_swr(self):
         self._writef("RM6")
         return int(self.__read()[3:-1])
-    def set_transmit_on(self):
-        self._writef("TX1")
-    def set_transmit_off(self):
-        self._writef("TX0")
+    def set_transmit(self,m): self._writef("TX%d"%m)
+    def set_transmit_on(self):  self.set_transmit(1)
+    def set_transmit_off(self): self.set_transmit(0)
     def set_tuner_off(self):
         self._writef("AC000")
     def set_tuner_on(self):
         self._writef("AC001")
     def set_tuner_start_tunning(self):
         self._writef("AC002")
-    def set_mode_cwusb(self):
-        self._writef("MD03")
+    def set_mode(self,m): self._writef("MD0%X"%m)
+    def set_mode_lsb    (self):self.set_mode(eModes.lsb    .value)
+    def set_mode_usb    (self):self.set_mode(eModes.usb    .value)
+    def set_mode_cwusb  (self):self.set_mode(eModes.cwusb  .value)
+    def set_mode_fm     (self):self.set_mode(eModes.fm     .value)
+    def set_mode_am     (self):self.set_mode(eModes.am     .value)
+    def set_mode_rttylsb(self):self.set_mode(eModes.rttylsb.value)
+    def set_mode_cwlsb  (self):self.set_mode(eModes.cwlsb  .value)
+    def set_mode_datalsb(self):self.set_mode(eModes.datalsb.value)
+    def set_mode_rttyusb(self):self.set_mode(eModes.rttyusb.value)
+    def set_mode_datafm (self):self.set_mode(eModes.datafm .value)
+    def set_mode_fm_n   (self):self.set_mode(eModes.fmn    .value)
+    def set_mode_datausb(self):self.set_mode(eModes.datausb.value)
+    def set_mode_am_n   (self):self.set_mode(eModes.amn    .value)
+    def set_mode_c4fm   (self):self.set_mode(eModes.c4fm   .value)
+    def power_switch(self,p): self._writef("PS%d"%p)
+
+
+
     def test(self):
         self.swr_scan( 7010000)
         f=self.get_frequency()
@@ -95,7 +146,10 @@ class yaesu_com:
             swrarr+=[self.get_swr()]
         self.set_transmit_off()
         swrnat=numpy.array(swrarr).mean()
-        swr=(math.log(342.483)-math.log(256-swrnat))/0.315294
+        a1=0.00385111
+        a2=0.000160436
+        a3=-4.21973e-07
+        swr=a1*swrnat+a2*swrnat**2+a3*swrnat**3+1
         f=self.get_frequency()
         return {'freq':f, 'swr':swr, 'swr255':swrnat}
 
@@ -182,20 +236,25 @@ def swrplot(inp, plotfile='',datafile='',):
 if __name__ == "__main__":
     #m = ft450d('/dev/ttyUSB0')
     m = ft991a('/dev/ttyUSB0')
+    m.set_verbose()
     #m.test()
     swr=[]
     #swr+=m.swr_scan_band_160m()
     #swr+=m.swr_scan_band_80m ()
     #swr+=m.swr_scan_band_40m ()
     #swr+=m.swr_scan_band_30m ()
-    swr+=m.swr_scan_band_20m ()
+    #swr+=m.swr_scan_band_20m ()
     #swr+=m.swr_scan_band_17m ()
     #swr+=m.swr_scan_band_15m ()
     #swr+=m.swr_scan_band_12m ()
     #swr+=m.swr_scan_band_10m ()
     #swr+=m.swr_scan_band_6m  ()
     #swr+=m.swr_scan_band_2m  ()
-    #swr+=m.swr_scan_band_70cm()
-    #sorted(swr, key=itemgetter('freq'))
-    swrplot(swr,plotfile='plot.pdf',datafile='data.csv')
+    swr+=m.swr_scan_band_70cm(npoints=3,power=5)
+    swr+=m.swr_scan_band_2m(npoints=3,power=5)
+    m.set_frequency(145575000)
+    m.set_mode_fm()
+    swr=sorted(swr, key=lambda x: x['freq'])
+    basename=time.strftime('%Y-%m-%d-%H-%M-%SZ',time.gmtime())
+    swrplot(swr,plotfile='%s.pdf'%basename,datafile='%s.csv'%basename)
 

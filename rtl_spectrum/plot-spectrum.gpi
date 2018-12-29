@@ -1,7 +1,7 @@
 #!/usr/bin/gnuplot
 
 #rtl_power -f 126.674M:126.676M:20 -i 10 -p 78  -g 20 a
-!cat a|sed 400q|awk 'BEGIN{FS=", "}{date=$1; time=$2; fbeg=$3; fend=$4; fstep=$5;i=0; for(f=fbeg;f<=fend;f+=fstep){i++;printf ("%s %s, %d, %f\n",date, time, f, $(6+i)); }print "";}' >|b
+!cat d|sed ''|awk 'BEGIN{FS=", "}{date=$1; time=$2; fbeg=$3; fend=$4; fstep=$5;i=0; for(f=fbeg;f<=fend;f+=fstep){i++;printf ("%s %s, %d, %f\n",date, time, f, $(6+i)); }print "";}' >|b
 
 
 set datafile separator comma
