@@ -53,22 +53,14 @@ class yaesu_com:
     def __sleep(self):
         time.sleep(.2)
 
-    def __sleep_tx(self): time.sleep(.025)
-    def __sleep_rx(self): time.sleep(1e-5)
-
     def __flush(self):
         self.port.flushInput()
         self.port.flushOutput()
 
     def __write(self,cmd):
         cmd+=';'
-        if self.verbose:print(end='>>> ')
-        for i in cmd:
-            self.__sleep_tx()
-            self.port.write(i.encode())
-            if self.verbose:print(i,end='')
-        if self.verbose:print()
-
+        if self.verbose:print('>>> '+cmd)
+        self.port.write(cmd.encode())
 
     def _writef(self, cmd):
         self.__flush()
@@ -76,18 +68,11 @@ class yaesu_com:
 
     def __read(self):
         in_buff=b''
-        waitnone=0
-        while True:
-            more=self.port.inWaiting()
-            recv=self.port.read_all()
-            in_buff+=recv
-            if waitnone == 200: break
-            if more==0:
-                self.__sleep_rx()
-                waitnone+=1
-            else:
-                if self.verbose:print(waitnone, "  inWaiting ",more," ", len(recv), "   ", len(in_buff))
-                waitnone=0
+        self.__sleep()
+        while self.port.in_waiting:
+            in_buff+=self.port.read_all()    #read the contents of the buffer
+            self.__sleep()
+        print("READ: %s"%(in_buff))
         if self.verbose:print("<<< (%d) %s"%(len(in_buff),in_buff))
         return in_buff
 
@@ -151,6 +136,7 @@ class yaesu_com:
         a3=-4.21973e-07
         swr=a1*swrnat+a2*swrnat**2+a3*swrnat**3+1
         f=self.get_frequency()
+        #time.sleep(1)
         return {'freq':f, 'swr':swr, 'swr255':swrnat}
 
     def swr_scan(self,hertz,power=10):
@@ -234,26 +220,28 @@ def swrplot(inp, plotfile='',datafile='',):
     plt.savefig(plotfile, bbox_inches='tight')
 
 if __name__ == "__main__":
-    #m = ft450d('/dev/ttyUSB0')
-    m = ft991a('/dev/ttyUSB0')
+    #m = ft450d('COM23')
+    m = ft450d('/dev/ttyUSB0')
+    #m = ft991a('/dev/ttyUSB0')
     m.set_verbose()
     #m.test()
     swr=[]
-    #swr+=m.swr_scan_band_160m()
-    #swr+=m.swr_scan_band_80m ()
-    #swr+=m.swr_scan_band_40m ()
-    #swr+=m.swr_scan_band_30m ()
-    #swr+=m.swr_scan_band_20m ()
-    #swr+=m.swr_scan_band_17m ()
-    #swr+=m.swr_scan_band_15m ()
-    #swr+=m.swr_scan_band_12m ()
-    #swr+=m.swr_scan_band_10m ()
+    #swr+=m.swr_scan_band_160m(power=5)
+    #swr+=m.swr_scan_band_80m (npoints=3,power=5)
+    swr+=m.swr_scan_band_40m (npoints=3,power=5)
+    #swr+=m.swr_scan_band_30m (npoints=3,power=5)
+    #swr+=m.swr_scan_band_20m (npoints=3,power=5)
+    #swr+=m.swr_scan_band_17m (npoints=3,power=5)
+    #swr+=m.swr_scan_band_15m (npoints=3,power=5)
+    #swr+=m.swr_scan_band_12m (npoints=3,power=5)
+    #swr+=m.swr_scan_band_10m (npoints=3,power=5)
     #swr+=m.swr_scan_band_6m  ()
     #swr+=m.swr_scan_band_2m  ()
-    swr+=m.swr_scan_band_70cm(npoints=3,power=5)
-    swr+=m.swr_scan_band_2m(npoints=3,power=5)
-    m.set_frequency(145575000)
-    m.set_mode_fm()
+    #swr+=m.swr_scan_band_40m (npoints=3,power=5)
+    #swr+=m.swr_scan_band_70cm(npoints=3,power=5)
+    #swr+=m.swr_scan_band_2m(npoints=3,power=5)
+    #m.set_frequency(145575000)
+    #m.set_mode_fm()
     swr=sorted(swr, key=lambda x: x['freq'])
     basename=time.strftime('%Y-%m-%d-%H-%M-%SZ',time.gmtime())
     swrplot(swr,plotfile='%s.pdf'%basename,datafile='%s.csv'%basename)
